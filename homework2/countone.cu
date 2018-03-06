@@ -34,12 +34,12 @@ int main(int argc, char *argv[]){
 
   FILE *file = fopen(argv[1], "r");
 
-  int data;
+  int data, row, col;
+fscanf(file, "%d", &row)
+fscanf(file, "%d", &col)
 
-  int matRow = RdRowSize(file);
-  int matCol = RdColumnSize(file);
 
-  for (int i = 0; i < matRow*matCol; i++)  {
+  for (int i = 0; i < row*col; i++)  {
     fscanf(file, "%d", &data);
     *in[i] = data;
   }
