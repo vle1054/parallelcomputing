@@ -11,10 +11,9 @@
 
 __global__ void countones(int *in, int *out) {
 
-  __shared__ int *temp;
+  __shared__ int *temp = 0;
 
   unsigned int tid = threadIdx.x;
-  unsigned int i = blockIdx.x*blockDim.x + threadIdx.x;
 
 if (in[tid]==1){
   atomicadd(*temp,1);
