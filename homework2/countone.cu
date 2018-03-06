@@ -1,7 +1,6 @@
 #include <string>
 #include <fstream>
 #include <iostream>
-#include <Vector>
 #include <cuda.h>
 #include <stdio.h>
 #include <time.h>
