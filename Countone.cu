@@ -2,45 +2,48 @@
 #include <fstream>
 #include <iostream>
 #include <Vector>
+#include <cuda.h>
+#include <stdio.h>
+#include <time.h>
 
 #define N (2048*2048)
 #define THREADS_PER_BLOCK 512
 
 __global__ void countones(int *in, int *out) {
-  __shared__ int temp[BLOCK_SIZE + 2 * RADIUS];
-  int gindex = threadIdx.x + blockIdx.x * blockDim.x;
-  int lindex = threadIdx.x + radius;
-  // Read input elements into shared memory
-  temp[lindex] = in[gindex];
-  if (threadIdx.x < RADIUS) {
-    temp[lindex – RADIUS] = in[gindex – RADIUS];
-    temp[lindex + BLOCK_SIZE] = in[gindex + BLOCK_SIZE];
-  }
-  // Synchronize (ensure all the data is available)
+
+  __shared__ int *temp;
+
+  unsigned int tid = threadIdx.x;
+  unsigned int i = blockIdx.x*blockDim.x + threadIdx.x;
+
+if (in[tid]==1){
+  atomicadd(*temp,1);
+
+}
+
   __syncthreads();
-  // Apply the stencil
-  int result = 0;
-  for (int offset = -RADIUS ; offset <= RADIUS ; offset++)
-  result += temp[lindex + offset];
-  // Store the result
-  out[gindex] = result;
+
+  *out = *temp;
 }
 int main(int argc, char *argv[]){
+
   int row, col, temp;
-vector<int> array;
+  vector<int> array;
+
   string infile = argv[1];
 
   ifstream fin;
   fin.open(infile);
   fin >> row >> col;
 
-for(ini=0;i<(row*col);i++){
-fin<<temp;
-array[i]=temp
+  for(ini=0; i<(row*col); i++){
+    fin<<temp;
+    array[i]=temp;
+  }
 
-  
-}
+  cout << "DONE\n";
 
+  fin.close();
 
 
 
@@ -52,7 +55,7 @@ array[i]=temp
   cudaMalloc((void **)&d_a, size);
   cudaMalloc((void **)&d_b, size);
   cudaMalloc((void **)&d_c, size);
-    // Alloc space for host copies of a, b, c and setup input values
+  // Alloc space for host copies of a, b, c and setup input values
   a = (int *)malloc(size); random_ints(a, N);
   b = (int *)malloc(size); random_ints(b, N);
   c = (int *)malloc(size);
