@@ -1,9 +1,4 @@
-#include <string>
-#include <fstream>
-#include <iostream>
-#include <cuda.h>
 #include <stdio.h>
-#include <time.h>
 
 #define N (2048*2048)
 #define THREADS_PER_BLOCK 512
@@ -14,10 +9,10 @@ __global__ void countones(int *in, int *out) {
 
   unsigned int tid = threadIdx.x;
 
-if (in[tid]==1){
-  atomicadd(*temp,1);
+  if (in[tid]==1){
+    atomicadd(*temp,1);
 
-}
+  }
 
   __syncthreads();
 
@@ -37,23 +32,19 @@ int main(int argc, char *argv[]){
   in = (int *)malloc(size);
   out = (int *)malloc(size);
 
-  int row, col, temp;
-  vector<int> array;
+  FILE *file = fopen(argv[1], "r");
 
-  string infile = argv[1];
+  int data;
 
-  ifstream fin;
-  fin.open(infile);
-  fin >> row >> col;
+  int matRow = RdRowSize(file);
+  int matCol = RdColumnSize(file);
 
-  for(ini=0; i<(row*col); i++){
-    fin<<temp;
-    array[i]=temp;
+  for (int i = 0; i < matRow*matCol; i++)  {
+    fscanf(file, "%d", &data);
+    *in[i] = data;
   }
 
-  cout << "DONE\n";
-
-  fin.close();
+  fclose(file);
 
   int *in = *array;
 
