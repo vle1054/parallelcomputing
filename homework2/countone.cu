@@ -25,7 +25,19 @@ if (in[tid]==1){
 
   *out = *temp;
 }
+
 int main(int argc, char *argv[]){
+
+  int *in, *out; // host copies in and cout
+  int *d_in, *d_out; // device copies
+  int size = N * sizeof(int);
+
+  // Alloc space for device copies of a, b, c
+  cudaMalloc((void **)&d_in, size);
+  cudaMalloc((void **)&d_out, size);
+  // Alloc space for host copies of a, b, c and setup input values
+  in = (int *)malloc(size);
+  out = (int *)malloc(size);
 
   int row, col, temp;
   vector<int> array;
@@ -45,33 +57,21 @@ int main(int argc, char *argv[]){
 
   fin.close();
 
+  int *in = *array;
 
 
-  int *a, *b, *c; // host copies of a, b, c
-  int *d_a, *d_b, *d_c; // device copies of a, b, c
-  int size = N * sizeof(int);
-
-  // Alloc space for device copies of a, b, c
-  cudaMalloc((void **)&d_a, size);
-  cudaMalloc((void **)&d_b, size);
-  cudaMalloc((void **)&d_c, size);
-  // Alloc space for host copies of a, b, c and setup input values
-  a = (int *)malloc(size); random_ints(a, N);
-  b = (int *)malloc(size); random_ints(b, N);
-  c = (int *)malloc(size);
 
   // Copy inputs to device
-  cudaMemcpy(d_a, a, size, cudaMemcpyHostToDevice);
-  cudaMemcpy(d_b, b, size, cudaMemcpyHostToDevice);
+  cudaMemcpy(d_in, in, size, cudaMemcpyHostToDevice);
 
   // Launch add() kernel on GPU
-  countones <<<N/THREADS_PER_BLOCK,THREADS_PER_BLOCK>>> (d_a, d_b, d_c);
+  countones <<<N/THREADS_PER_BLOCK,THREADS_PER_BLOCK>>> (d_in, d_out);
 
   // Copy result back to host
-  cudaMemcpy(c, d_c, size, cudaMemcpyDeviceToHost);
+  cudaMemcpy(out, d_out, size, cudaMemcpyDeviceToHost);
 
   // Cleanup
-  free(a); free(b); free(c);
-  cudaFree(d_a); cudaFree(d_b); cudaFree(d_c);
+  free(in); free(out);
+  cudaFree(d_in); cudaFree(d_out);
   return 0;
 }
