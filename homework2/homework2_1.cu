@@ -1,3 +1,9 @@
+/*
+Vinh Le
+CSCI 440 - Parallel Computing
+Colorado School of Mines 2018
+*/
+
 #include <stdio.h>
 
 __global__ void countones(int *in, int *out) {
