@@ -9,7 +9,7 @@ __global__ void transpose(int *in, int *out, int row) {
   __shared__ int *temp;
   unsigned int tid = threadIdx.x;
 
-  out[(tid/row)*row+(tid%row)] = in[tid]
+  out[(tid/row)*row+(tid%row)] = in[tid];
 
   __syncthreads();
   *out = *temp;
@@ -47,9 +47,9 @@ int main(int argc, char *argv[]){
   // Copy result back to host
   cudaMemcpy(out, d_out, size, cudaMemcpyDeviceToHost);
 
-  for (int i = 0; i<col;i++){
+  for (int i = 0; i< col;i++){
     for (int j=0; j< row;j++){
-      printf(out[i*col+j])
+      printf("%d",out[i*col+j]);
     }
   }
   // Cleanup
