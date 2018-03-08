@@ -14,7 +14,7 @@ int main(int argc, char *argv[]){
   int *in, *out; // host copies in and cout
   int *d_in, *d_out; // device copies
 FILE *file = fopen(argv[1], "r");
-  int data, row, col;
+  int row, col;
 fscanf(file, "%d",&row);
 fscanf(file, "%d", &col);
 
