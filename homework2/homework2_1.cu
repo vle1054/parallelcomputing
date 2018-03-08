@@ -1,6 +1,7 @@
 /*
 Vinh Le
 CSCI 440 - Parallel Computing
+Homework 2.1 - count ones in matrix
 Colorado School of Mines 2018
 */
 

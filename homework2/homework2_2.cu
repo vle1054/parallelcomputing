@@ -1,17 +1,18 @@
 /*
 Vinh Le
 CSCI 440 - Parallel Computing
+Homework 2.2 - transpose matrix
 Colorado School of Mines 2018
 */
 #include <stdio.h>
 
 __global__ void transpose(int *in, int *out, int row, int col) {
   unsigned int tid = threadIdx.x;
-if( tid<(row*col)){
-int newid = ((tid%row)*col+(tid/row));
- out[newid] = in[tid];
+  if( tid<(row*col)){
+    int newid = ((tid%row)*col+(tid/row));
+    out[newid] = in[tid];
   }
-__syncthreads();
+  __syncthreads();
 
 
 }
@@ -49,22 +50,22 @@ int main(int argc, char *argv[]){
   cudaMemcpy(out, d_out, size, cudaMemcpyDeviceToHost);
 
 
-for (int i = 0 ; i < row*col;i++){
-if (i%row==0){
-printf("\n");
-}
-printf("%d ", in[i]);
+  for (int i = 0 ; i < row*col;i++){
+    if (i%row==0){
+      printf("\n");
+    }
+    printf("%d ", in[i]);
 
-}
-printf("\n");
+  }
+  printf("\n");
 
-for (int i = 0 ; i < row*col;i++){
-if (i%col==0){
-printf("\n");
-}
+  for (int i = 0 ; i < row*col;i++){
+    if (i%col==0){
+      printf("\n");
+    }
 
-printf("%d ", out[i]);
-}
+    printf("%d ", out[i]);
+  }
 
 
   // Cleanup
