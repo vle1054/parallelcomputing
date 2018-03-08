@@ -5,14 +5,16 @@ Colorado School of Mines 2018
 */
 #include <stdio.h>
 
-__global__ void transpose(int *in, int *out, int row) {
+__global__ void transpose(int *in, int *out, int row, int col) {
   __shared__ int *temp;
   unsigned int tid = threadIdx.x;
+if( tid<(row*col)){
+ temp[(tid/row)*row+(tid%row)] = in[tid];
 
-  temp[(tid/row)*row+(tid%row)] = in[tid];
-
-  __syncthreads();
-  *out = temp;
+printf("tid %d was transposed to %d", tid, ((tid/row)*row+(tid%row)));
+  }
+__syncthreads();
+  *out = *temp;
 }
 
 int main(int argc, char *argv[]){
@@ -41,17 +43,27 @@ int main(int argc, char *argv[]){
   // Copy inputs to device
   cudaMemcpy(d_in, in, size, cudaMemcpyHostToDevice);
 
+printf("running transpose\n");
   // Launch add() kernel on GPU
-  transpose <<<1, row*col>>> (d_in, d_out, row);
+  transpose <<<1, row*col>>> (d_in, d_out, row, col);
 
+printf("Finish transpose\n");
   // Copy result back to host
   cudaMemcpy(out, d_out, size, cudaMemcpyDeviceToHost);
 
   for (int i = 0; i< col;i++){
     for (int j=0; j< row;j++){
-      printf("%d",out[i*col+j]);
+      printf("%d",in[i*col+j]);
     }
-    printf("\n")
+    printf("\n");
+  }
+
+
+  for (int i = 0; i< row;i++){
+    for (int j=0; j< col;j++){
+      printf("%d",out[i*row+j]);
+    }
+    printf("\n");
   }
   // Cleanup
   free(in); free(out);
