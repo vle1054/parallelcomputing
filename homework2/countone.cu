@@ -7,41 +7,44 @@ __global__ void countones(int *in, int *out) {
     atomicAdd(&temp,1);
   }
   __syncthreads();
- *out = temp;
+  *out = temp;
 }
 
 int main(int argc, char *argv[]){
-  int *in, *out; // host copies in and cout
-  int *d_in, *d_out; // device copies
-FILE *file = fopen(argv[1], "r");
+
+  FILE *file = fopen(argv[1], "r");
   int row, col;
-fscanf(file, "%d",&row);
-fscanf(file, "%d", &col);
+  fscanf(file, "%d",&row);
+  fscanf(file, "%d", &col);
 
- int size = row * col * sizeof(int);
+  int size = row * col * sizeof(int);
 
-cudaMalloc((void **)&d_in, size);
-  cudaMalloc((void **)&d_out, size);
-  // Alloc space for host copies of a, b, c and setup input values
+  int *in, *out; // host copies in and cout
   in = (int *)malloc(size);
-  out = (int *)malloc(size);
+  out = (int *)malloc(sizeof(int));
 
-for (int i = 0; i < row*col; i++)  {
+
+
+    for (int i = 0; i < row*col; i++)  {
     fscanf(file, "%d", &in[i]);
   }
 
   fclose(file);
 
-// Copy inputs to device
+  int *d_in, *d_out; // device copies
+  cudaMalloc((void **)&d_in, size);
+  cudaMalloc((void **)&d_out, sizeof(int));
+
+  // Copy inputs to device
   cudaMemcpy(d_in, in, size, cudaMemcpyHostToDevice);
 
   // Launch add() kernel on GPU
   countones <<<1, row*col>>> (d_in, d_out);
 
   // Copy result back to host
-  cudaMemcpy(out, d_out, size, cudaMemcpyDeviceToHost);
+  cudaMemcpy(out, d_out, sizeof(int), cudaMemcpyDeviceToHost);
 
-printf("There are %d ones.\n", *out);
+  printf("There are %d ones.\n", *out);
 
   // Cleanup
   free(in); free(out);
