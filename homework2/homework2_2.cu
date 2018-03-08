@@ -9,10 +9,10 @@ __global__ void transpose(int *in, int *out, int row) {
   __shared__ int *temp;
   unsigned int tid = threadIdx.x;
 
-  out[(tid/row)*row+(tid%row)] = in[tid];
+  temp[(tid/row)*row+(tid%row)] = in[tid];
 
   __syncthreads();
-  *out = *temp;
+  *out = temp;
 }
 
 int main(int argc, char *argv[]){
@@ -51,6 +51,7 @@ int main(int argc, char *argv[]){
     for (int j=0; j< row;j++){
       printf("%d",out[i*col+j]);
     }
+    printf("\n")
   }
   // Cleanup
   free(in); free(out);
