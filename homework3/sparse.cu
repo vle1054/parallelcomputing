@@ -1,7 +1,15 @@
+/*
+	Vinh Le
+	CSCI 440 - Parallel Computing
+	Homework 3 - Sparse Vector Matrix
+	Colorado School of Mines 2018
+*/
+
 #include <stdio.h>
 #include <cmath>
 #include <iostream>
 
+//Set tolerance for the check
 #define TOLERANCE 0.001
 
 __global__ void spmv (int * ptr, int * indices, float * data, float * b, float * t) {
@@ -9,15 +17,19 @@ __global__ void spmv (int * ptr, int * indices, float * data, float * b, float *
 	int tid = threadIdx.x;
 	__shared__ float pSum[32];
 	pSum[tid] = 0;
-	for (int j = ptr[i] + tid; j<ptr[i+1]; j+= blockDim.x) {
-		pSum[tid] +=  data[j] * b[indices[j]];
+
+//utilize memory coalescing by using 32 threads and 32 data elements at a time
+	for (int a = ptr[i] + tid; a<ptr[i+1]; a+= blockDim.x) {
+		pSum[tid] +=  data[a] * b[indices[a]];
 	}
-	__syncthreads();
-	for (int z = blockDim.x/2; z > 0; z /=2) {
-		if (tid < z) {
-			pSum[tid] += pSum[tid+z];
+	__syncthreads();//Sync threads for correctness
+
+//utilize load balancing by using only 32 threads at a time and uses half the threads
+	for (int b = blockDim.x/2; b > 0; b /=2) {
+		if (tid < b) {
+			pSum[tid] += pSum[tid+b];
 		}
-		__syncthreads();
+		__syncthreads();//Sync threads for correctness
 	}
 	t[i] = pSum[0];
 }
@@ -52,10 +64,6 @@ main (int argc, char **argv) {
   data = (float *) malloc(n*sizeof(float));
   b = (float *) malloc(nc*sizeof(float));
   t = (float *) malloc(nr*sizeof(float));
-  //add malloc for host t
-  float * t_h;
-  t_h = (float *) malloc(nr*sizeof(float));
-
 
   // Read data in coordinate format and initialize sparse matrix
   int lastr=0;
@@ -88,6 +96,13 @@ main (int argc, char **argv) {
 
   // TODO: Compute result on GPU and compare output
 
+//	A CUDA implementation of SpMV which optimizes for memory coalescing or load balancing.
+
+//initialize and allocate memory for host copy of data
+float * t_h;
+t_h = (float *) malloc(nr*sizeof(float));
+
+//initialize and allocate memory for device same set as host
 int * ptr_d, * indices_d;
 float * data_d, * b_d, *t_d;
 
@@ -97,6 +112,7 @@ cudaMalloc((void**) & data_d, n*sizeof(float));
 cudaMalloc((void**) & b_d, nc*sizeof(float));
 cudaMalloc((void**) & t_d, nr*sizeof(float));
 
+//copy data from host to device
 cudaMemcpy(ptr_d, ptr, (nr+1)*sizeof(int), cudaMemcpyHostToDevice);
 cudaMemcpy(indices_d, indices, n*sizeof(int), cudaMemcpyHostToDevice);
 cudaMemcpy(data_d, data, n*sizeof(float), cudaMemcpyHostToDevice);
@@ -105,15 +121,16 @@ spmv<<<nr, 32>>>(ptr_d, indices_d, data_d, b_d, t_d);
 cudaMemcpy(t_h, t_d, nr*sizeof(float), cudaMemcpyDeviceToHost);
 
 
+//TODO: You should use the CPU implementation (sparse_matvec.c) to check whether the results produced by your GPU code are correct.
 
-
-int fail = 0;
-for (int k = 0; k < nr; k++) {
-  if (abs(t_h[k] - t[k]) > TOLERANCE) {
-    fail += 1;
+//Compares t (CPU) with t_h (GPU) to determine accuracy
+int tfail = 0;
+for (int i = 0; i < nr; i++) {
+  if (abs(t_h[i] - t[i]) > TOLERANCE) {//take abs value and compare with tolerance
+    tfail += 1;//if difference exceeds tolerance
   }
 }
 
-std::cout << "Number of failures: " <<fail <<"\n";
+std::cout << "Number of failures: " << tfail <<"\n";//print the number of failures
 
 }
