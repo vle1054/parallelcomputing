@@ -15,19 +15,21 @@
 __global__ void spmv (int * ptr, int * indices, float * data, float * b, float * t) {
 	int i = blockIdx.x;
 	int tid = threadIdx.x;
+
 	__shared__ float pSum[32];
+
 	pSum[tid] = 0;
 
 //utilize memory coalescing by using 32 threads and 32 data elements at a time
-	for (int a = ptr[i] + tid; a<ptr[i+1]; a+= blockDim.x) {
+	for (int a = ptr[i] + tid; a < ptr[i+1]; a += blockDim.x) {
 		pSum[tid] +=  data[a] * b[indices[a]];
 	}
 	__syncthreads();//Sync threads for correctness
 
 //utilize load balancing by using only 32 threads at a time and uses half the threads
-	for (int b = blockDim.x/2; b > 0; b /=2) {
+	for (int b = blockDim.x/2; b > 0; b /= 2) {
 		if (tid < b) {
-			pSum[tid] += pSum[tid+b];
+			pSum[tid] += pSum[tid + b];
 		}
 		__syncthreads();//Sync threads for correctness
 	}
@@ -96,7 +98,7 @@ main (int argc, char **argv) {
 
   // TODO: Compute result on GPU and compare output
 
-//	A CUDA implementation of SpMV which optimizes for memory coalescing or load balancing.
+//	TODO: A CUDA implementation of SpMV which optimizes for memory coalescing or load balancing.
 
 //initialize and allocate memory for host copy of data
 float * t_h;
@@ -131,6 +133,6 @@ for (int i = 0; i < nr; i++) {
   }
 }
 
-std::cout << "Number of failures: " << tfail <<"\n";//print the number of failures
+std::cout << "Number of Failures: " << tfail <<"\n";//print the number of failures
 
 }
