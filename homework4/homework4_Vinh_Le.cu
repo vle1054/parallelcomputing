@@ -29,10 +29,10 @@ __global__ void SCAN (int * arr, int * arr_gpu, int * n_d) {
   extern __shared__ float temp[]; // allocated on invocation
   int thid = threadIdx.x;
   int pout = 0, pin = 1;
-  int n = &n_d;
+  int n = &n_d
   // load input into shared memory.
   // Exclusive scan: shift right by one and set first element to 0
-  temp[thid] = (thid > 0) ? q[thid-1] : 0;
+  temp[thid] = (thid > 0) ? arr[thid-1] : 0;
   __syncthreads();
   for( int offset = 1; offset < n; offset <<= 1 )
   {
@@ -44,7 +44,7 @@ __global__ void SCAN (int * arr, int * arr_gpu, int * n_d) {
     temp[pout*n+thid] = temp[pin*n+thid];
     __syncthreads();
   }
-  arr_gpu[thid] = temp[pout*n+thid]; // write output
+  arr_gpu[thid] = temp[pout*n+thid1]; // write output
 }
 
 int main(int argc, char *argv[]){
