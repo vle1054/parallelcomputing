@@ -104,7 +104,7 @@ cout<<"CPU SCAN"<<endl;
 arr_cpu[0]=arr[0];
 
 // CPU SCAN
-for (i=1; i<n; i++) {
+for (int i=1; i<n; i++) {
   arr_cpu[i]= arr_cpu[i-1]+arr[i];
 }
 
@@ -129,7 +129,7 @@ cudaMemcpy(arr_gpu, arr_gpu_d, n*sizeof(float), cudaMemcpyDeviceToHost);
 
 //Compares arr_cpu with arr_gpu to determine accuracy
 int tfail = 0;
-for (int i = 0; i < nr; i++) {
+for (int i = 0; i < n; i++) {
   if (abs(arr_gpu[i] - arr_cpu[i]) > TOLERANCE) {//take abs value and compare with tolerance
     tfail += 1;//if difference exceeds tolerance
   }
