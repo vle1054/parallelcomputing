@@ -15,22 +15,12 @@ using namespace std;
 //Set tolerance for the check
 #define TOLERANCE 0.001
 
-//avoid bank conflicts
-#define NUM_BANKS 16
-#define LOG_NUM_BANKS 4
-#ifdef ZERO_BANK_CONFLICTS
-#define CONFLICT_FREE_OFFSET(n) \
- ((n) >> NUM_BANKS + (n) >> (2 * LOG_NUM_BANKS))
-#else
-#define CONFLICT_FREE_OFFSET(n) ((n) >> LOG_NUM_BANKS)
-#endif
-
 __global__ void scan (int * arr, int * arr_gpu, int * n_d) {
   extern __shared__ float temp[]; // allocated on invocation
   int thid = threadIdx.x;
   int pout = 0, pin = 1;
-  int n ;
-  n= *n_d;
+  int n;
+  n = *n_d;
   // load input into shared memory.
   // Exclusive scan: shift right by one and set first element to 0
   temp[thid] = (thid > 0) ? arr[thid-1] : 0;
