@@ -42,9 +42,7 @@ int main(int argc, char *argv[]){
 
 srand(time(NULL));
 
-int * n;
-n = (int *) malloc(sizeof(int));
-*n = atoi(argv[1]);
+int n = atoi(argv[1]);
 
 //Generate array
 cout<<"Generating "<<n<< " random numbers"<<endl;
