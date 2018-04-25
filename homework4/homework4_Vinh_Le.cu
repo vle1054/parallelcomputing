@@ -15,7 +15,7 @@ using namespace std;
 #define TOLERANCE 0.001
 
 __global__ void scan (int * arr, int * arr_gpu, int n) {
-   __shared__ float temp[]; // allocated on invocation
+   __shared__ float temp[1024]; // allocated on invocation
    int tid = threadIdx.x;
     for (int stride = 1024/2; stride>0;stride/=2){
       __syncthreads();
