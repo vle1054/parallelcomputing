@@ -44,7 +44,7 @@ srand(time(NULL));
 
 int * n;
 n = (int *) malloc(sizeof(int));
-n = atoi(argv[1]);
+*n = atoi(argv[1]);
 
 //Generate array
 cout<<"Generating "<<n<< " random numbers"<<endl;
