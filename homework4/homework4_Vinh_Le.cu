@@ -17,9 +17,9 @@ using namespace std;
 __global__ void scan (int * arr, int * arr_gpu, int n) {
    __shared__ float temp[1024]; // allocated on invocation
    int tid = threadIdx.x;
-    for (int stride = 1024/2; stride>0;stride/=2){
+    for (int stride = 1; stride>1024;stride*=2){
       __syncthreads();
-      if(tid+stride>1024){
+      if(tid+stride<1024){
           temp[tid+stride] += arr[tid];
         }
       __syncthreads();
