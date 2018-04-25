@@ -44,7 +44,7 @@ __global__ void SCAN (int * arr, int * arr_gpu, int * n_d) {
     temp[pout*n+thid] = temp[pin*n+thid];
     __syncthreads();
   }
-  arr_gpu[thid] = temp[pout*n+thid1]; // write output
+  arr_gpu[thid] = temp[pout*n+thid-1]; // write output
 }
 
 int main(int argc, char *argv[]){
