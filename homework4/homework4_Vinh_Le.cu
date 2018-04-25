@@ -29,7 +29,7 @@ int n = atoi(argv[1]);
 cout<<"Generating "<<n<< " random numbers"<<endl;
 
 int *arr, * arr_cpu, * arr_gpu;
-arr = (int *) malloc(n*sizeof(int))
+arr = (int *) malloc(n*sizeof(int));
 arr_cpu = (int *) malloc(n*sizeof(int));
 arr_gpu = (int *) malloc(n*sizeof(int));
 cout<<"Size of Array"<<sizeof(arr)<<endl;
