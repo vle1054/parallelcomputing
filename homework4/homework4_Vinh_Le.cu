@@ -7,7 +7,7 @@ Colorado School of Mines 2018
 #include <iostream>
 #include <ctime>
 #include <stdlib.h>
-#include <cmath>
+#include <math.h>
 
 using namespace std;
 
