@@ -15,11 +15,12 @@ using namespace std;
 //Set tolerance for the check
 #define TOLERANCE 0.001
 
-__global__ void scan (int * arr, int * arr_gpu, int * n) {
+__global__ void scan (int * arr, int * arr_gpu, int * n_d) {
   extern __shared__ float temp[]; // allocated on invocation
   int thid = threadIdx.x;
   int pout = 0, pin = 1;
-
+int n;
+n=*n_d;
   // load input into shared memory.
   // Exclusive scan: shift right by one and set first element to 0
   temp[thid] = (thid > 0) ? arr[thid-1] : 0;
@@ -34,7 +35,7 @@ __global__ void scan (int * arr, int * arr_gpu, int * n) {
     temp[pout*n+thid] = temp[pin*n+thid];
     __syncthreads();
   }
-  arr_gpu[thid] = temp[pout*n+thid-1]; // write output
+  arr_gpu[thid] = temp[pout*n+thid+1]; // write output
 }
 
 int main(int argc, char *argv[]){
@@ -66,6 +67,8 @@ for (int i=1; i<n; i++) {
   arr_cpu[i]= arr_cpu[i-1]+arr[i];
 }
 
+cout<<"GPU SCAN"<<endl;
+
 //initialize and allocate memory for device same set as host
 int * arr_d, * arr_gpu_d;
 int * n_d;
@@ -73,8 +76,6 @@ int * n_d;
 cudaMalloc((void**) & arr_d, n*sizeof(int));
 cudaMalloc((void**) & arr_gpu_d, n*sizeof(int));
 cudaMalloc((void**) & n_d, sizeof(int));
-
-cout<<"GPU SCAN"<<endl;
 
 //copy data from host to device
 cudaMemcpy(arr_d, arr, n*sizeof(int), cudaMemcpyHostToDevice);
