@@ -25,13 +25,13 @@ using namespace std;
 #define CONFLICT_FREE_OFFSET(n) ((n) >> LOG_NUM_BANKS)
 #endif
 
-__global__ void SCAN (int * arr, int * arr_gpu, int n) {
+__global__ void SCAN (int * arr, int * arr_gpu, int * n) {
   extern __shared__ float temp[]; // allocated on invocation
   int thid = threadIdx.x;
   int pout = 0, pin = 1;
   // load input into shared memory.
   // Exclusive scan: shift right by one and set first element to 0
-  temp[thid] = (thid > 0) ? arr[thid-1] : 0;
+  temp[thid] = (thid > 0) ? q[thid-1] : 0;
   __syncthreads();
   for( int offset = 1; offset < n; offset <<= 1 )
   {
@@ -43,14 +43,14 @@ __global__ void SCAN (int * arr, int * arr_gpu, int n) {
     temp[pout*n+thid] = temp[pin*n+thid];
     __syncthreads();
   }
-  arr_gpu[thid] = temp[pout*n+thid1]; // write output
+  arr_gpu[thid] = temp[pout*n+thid]; // write output
 }
 
 int main(int argc, char *argv[]){
 
 srand(time(NULL));
 
-int n;
+int * n;
 n = (int *) malloc(sizeof(int));
 n = atoi(argv[1]);
 
@@ -79,7 +79,7 @@ for (int i=1; i<n; i++) {
 
 //initialize and allocate memory for device same set as host
 int * arr_d, * arr_gpu_d;
-int n_d;
+int * n_d;
 
 cudaMalloc((void**) & arr_d, n*sizeof(int));
 cudaMalloc((void**) & arr_gpu_d, n*sizeof(int));
