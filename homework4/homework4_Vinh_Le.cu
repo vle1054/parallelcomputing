@@ -69,7 +69,7 @@ for (int i=1; i<n; i++) {
 
 //initialize and allocate memory for device same set as host
 int * arr_d, * arr_gpu_d;
-int * n_d;
+int n_d;
 
 cudaMalloc((void**) & arr_d, n*sizeof(int));
 cudaMalloc((void**) & arr_gpu_d, n*sizeof(int));
