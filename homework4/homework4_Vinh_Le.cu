@@ -4,8 +4,6 @@ CSCI 440 - Parallel Computing
 Homework 4 - CPU GPU SCAN
 Colorado School of Mines 2018
 */
-
-
 #include <iostream>
 #include <ctime>
 #include <stdlib.h>
@@ -16,26 +14,10 @@ using namespace std;
 #define TOLERANCE 0.001
 
 __global__ void scan (int * arr, int * arr_gpu, int * n_d) {
-  extern __shared__ float temp[]; // allocated on invocation
-  int thid = threadIdx.x;
-  int pout = 0, pin = 1;
-int n;
-n=*n_d;
-  // load input into shared memory.
-  // Exclusive scan: shift right by one and set first element to 0
-  temp[thid] = (thid > 0) ? arr[thid-1] : 0;
-  __syncthreads();
-  for( int offset = 1; offset < n; offset <<= 1 )
-  {
-    pout = 1 - pout; // swap double buffer indices
-    pin = 1 - pout;
-    if (thid >= offset)
-    temp[pout*n+thid] += temp[pin*n+thid - offset];
-    else
-    temp[pout*n+thid] = temp[pin*n+thid];
-    __syncthreads();
-  }
-  arr_gpu[thid] = temp[pout*n+thid+1]; // write output
+  __shared__ float temp[32];
+  int tid = threadIdx.x;
+
+
 }
 
 int main(int argc, char *argv[]){
@@ -43,7 +25,7 @@ int main(int argc, char *argv[]){
 srand(time(NULL));
 
 int n = atoi(argv[1]);
-
+n = (int) malloc(sizeof(int));
 //Generate array
 cout<<"Generating "<<n<< " random numbers"<<endl;
 
