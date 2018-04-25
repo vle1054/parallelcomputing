@@ -24,6 +24,8 @@ int main(int argc, char *argv[]){
 srand(time(NULL));
 
 int n = atoi(argv[1]);
+int arr[n];
+cout<<"Size of Array"<<sizeof(arr)<<endl;
 
 //Generate array
 cout<<"Generating "<<n<< " random numbers"<<endl;
