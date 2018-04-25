@@ -25,63 +25,32 @@ using namespace std;
 #define CONFLICT_FREE_OFFSET(n) ((n) >> LOG_NUM_BANKS)
 #endif
 
-__global__ void SCAN (int * arr, int * arr_gpu, int * n) {
-  extern __shared__ float temp[];// allocated on invocation
+__global__ void SCAN (int * arr, int * arr_gpu, int n) {
+  extern __shared__ float temp[]; // allocated on invocation
   int thid = threadIdx.x;
-  int offset = 1;
-
-  int ai = thid;
-  int bi = thid + (n/2);
-  int bankOffsetA = CONFLICT_FREE_OFFSET(ai);
-  int bankOffsetB = CONFLICT_FREE_OFFSET(ai);
-  temp[ai + bankOffsetA] = arr[ai];
-  temp[bi + bankOffsetB] = arr[bi];
-
-  int *d;
-  for (d = n>>1; d > 0; d >>= 1){ // build sum in place up the tree
-
+  int pout = 0, pin = 1;
+  // load input into shared memory.
+  // Exclusive scan: shift right by one and set first element to 0
+  temp[thid] = (thid > 0) ? arr[thid-1] : 0;
   __syncthreads();
-
-  if (thid < d){
-    int ai = offset*(2*thid+1)-1;
-    int bi = offset*(2*thid+2)-1;
-    ai += CONFLICT_FREE_OFFSET(ai);
-    bi += CONFLICT_FREE_OFFSET(bi);
-
-    temp[bi] += temp[ai];
+  for( int offset = 1; offset < n; offset <<= 1 )
+  {
+    pout = 1 - pout; // swap double buffer indices
+    pin = 1 - pout;
+    if (thid >= offset)
+    temp[pout*n+thid] += temp[pin*n+thid - offset];
+    else
+    temp[pout*n+thid] = temp[pin*n+thid];
+    __syncthreads();
   }
-
-  offset *= 2;
-
-  }
-  if (thid==0) { temp[n – 1 + CONFLICT_FREE_OFFSET(n - 1)] = 0; }
-  for (int d = 1; d < n; d *= 2){ // traverse down tree & build scan
-
-     offset >>= 1;
-     __syncthreads();
-     if (thid < d){
-       int ai = offset*(2*thid+1)-1;
-       int bi = offset*(2*thid+2)-1;
-       ai += CONFLICT_FREE_OFFSET(ai);
-       bi += CONFLICT_FREE_OFFSET(bi);
-
-       float t = temp[ai];
-       temp[ai] = temp[bi];
-       temp[bi] += t;
-      }
-   }
-   __syncthreads();
-
-  arr_gpu[ai] = temp[ai + bankOffsetA];
-  arr_gpu[bi] = temp[bi + bankOffsetB];
-
+  arr_gpu[thid] = temp[pout*n+thid1]; // write output
 }
 
 int main(int argc, char *argv[]){
 
 srand(time(NULL));
 
-int * n;
+int n;
 n = (int *) malloc(sizeof(int));
 n = atoi(argv[1]);
 
@@ -110,7 +79,7 @@ for (int i=1; i<n; i++) {
 
 //initialize and allocate memory for device same set as host
 int * arr_d, * arr_gpu_d;
-int * n_d;
+int n_d;
 
 cudaMalloc((void**) & arr_d, n*sizeof(int));
 cudaMalloc((void**) & arr_gpu_d, n*sizeof(int));
