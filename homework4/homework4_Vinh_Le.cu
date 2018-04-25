@@ -21,7 +21,7 @@ __global__ void scan (int * arr, int * arr_gpu, int n) {
       __syncthreads();
       if(tid+stride<1024){
           temp[tid+stride] += arr[tid];
-          printf(temp[tid+stride]);
+          printf("Value %d\n",temp[tid+stride]);
         }
       __syncthreads();
     }
