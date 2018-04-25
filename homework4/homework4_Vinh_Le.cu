@@ -15,7 +15,7 @@ using namespace std;
 //Set tolerance for the check
 #define TOLERANCE 0.001
 
-__global__ void scan (int * arr, int * arr_gpu, int n) {
+__global__ void scan (int * arr, int * arr_gpu, int * n) {
   extern __shared__ float temp[]; // allocated on invocation
   int thid = threadIdx.x;
   int pout = 0, pin = 1;
