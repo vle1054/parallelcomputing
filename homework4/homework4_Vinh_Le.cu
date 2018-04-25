@@ -69,7 +69,7 @@ cudaMalloc((void**) & arr_gpu_d, n*sizeof(int));
 //copy data from host to device
 cudaMemcpy(arr_d, arr, n*sizeof(int), cudaMemcpyHostToDevice);
 //GPU SCAN
-scan<<<TBLOCK, 1024>>>(arr_d, arr_gpu_d, n);
+scan<<<1, 1024>>>(arr_d, arr_gpu_d, n);
 //copy data from device to host
 cudaMemcpy(arr_gpu, arr_gpu_d, n*sizeof(float), cudaMemcpyDeviceToHost);
 
