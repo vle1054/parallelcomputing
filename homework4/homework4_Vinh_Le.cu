@@ -13,9 +13,26 @@ using namespace std;
 //Set tolerance for the check
 #define TOLERANCE 0.001
 
-__global__ void scan (int * arr, int * arr_gpu, int * n_d) {
-  __shared__ float temp[32];
-  int tid = threadIdx.x;
+__global__ void scan (int * arr, int * arr_gpu, int n) {
+  extern __shared__ float temp[]; // allocated on invocation
+   int thid = threadIdx.x;
+  int1 pout = 0, pin = 1;
+  // Load input into shared memory.
+   // This is exclusive scan, so shift right by one
+   // and set first element to 0
+  temp[pout*n + thid] = (thid > 0) ? arr[thid-1] : 0;
+  __syncthreads();
+  for (int offset = 1; offset < n; offset *= 2)
+  {
+    pout = 1 - pout; // swap double buffer indices
+    pin = 1 - pout;
+    if (thid >= offset)
+      temp[pout*n+thid] += temp[pin*n+thid - offset];
+    else
+      temp[pout*n+thid] = temp[pin*n+thid];
+    __syncthreads();
+  }
+  arr_gpu[thid] = temp[pout*n+thid]; // write output
 
 
 }
