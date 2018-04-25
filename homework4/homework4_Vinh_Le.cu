@@ -24,8 +24,6 @@ int main(int argc, char *argv[]){
 srand(time(NULL));
 
 int n = atoi(argv[1]);
-int arr[n];
-cout<<"Size of Array"<<sizeof(arr)<<endl;
 
 //Generate array
 cout<<"Generating "<<n<< " random numbers"<<endl;
@@ -34,14 +32,13 @@ int *arr, * arr_cpu, * arr_gpu;
 arr = (int *) malloc(n*sizeof(int));
 arr_cpu = (int *) malloc(n*sizeof(int));
 arr_gpu = (int *) malloc(n*sizeof(int));
-cout<<"Size of Array"<<sizeof(arr)<<endl;
 
 //fill arr with rnd nums between 1-1000
 for (int i = 0; i<n; i++){
   arr[i]= rand()%1000 + 1;
   cout<<arr[i]<<endl;
 }
-cout<<"Size of Array"<<sizeof(arr)<<endl;
+
 cout<<"CPU SCAN"<<endl;
 
 //set 0th element
@@ -55,11 +52,11 @@ for (int i=1; i<n; i++) {
 cout<<"GPU SCAN"<<endl;
 
 
-for(int i = 0; i<sizeof(arr_cpu)-1;i++){
+for(int i = 0; i<n;i++){
 cout<<arr_cpu[i]<<",";
 }
 cout<<endl;
-for(int i = 0; i< sizeof(arr_gpu);i++){
+for(int i = 0; i< n;i++){
 cout<<arr_gpu[i]<<",";
 }
 cout<<endl;
