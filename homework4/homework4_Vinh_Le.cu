@@ -68,16 +68,17 @@ for (int i=1; i<n; i++) {
 
 //initialize and allocate memory for device same set as host
 int * arr_d, * arr_gpu_d;
-int n_d;
+int * n_d;
 
 cudaMalloc((void**) & arr_d, n*sizeof(int));
 cudaMalloc((void**) & arr_gpu_d, n*sizeof(int));
+cudaMalloc((void**) & n_d, sizeof(int));
 
 cout<<"GPU SCAN"<<endl;
 
 //copy data from host to device
 cudaMemcpy(arr_d, arr, n*sizeof(int), cudaMemcpyHostToDevice);
-cudaMemcpy(n_d, n, sizeof(int), cudaMemcpyHostToDevice);
+cudaMemcpy(n_d, &n, sizeof(int), cudaMemcpyHostToDevice);
 //GPU SCAN
 scan<<<n, 32>>>(arr_d, arr_gpu_d, n_d);
 //copy data from device to host
