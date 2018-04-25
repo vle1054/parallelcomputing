@@ -25,7 +25,7 @@ using namespace std;
 #define CONFLICT_FREE_OFFSET(n) ((n) >> LOG_NUM_BANKS)
 #endif
 
-__global__ void SCAN (int * arr, int * arr_gpu, int  n) {
+__global__ void SCAN (int * arr, int * arr_gpu, int * n) {
   extern __shared__ float temp[];// allocated on invocation
   int thid = threadIdx.x;
   int offset = 1;
@@ -37,7 +37,8 @@ __global__ void SCAN (int * arr, int * arr_gpu, int  n) {
   temp[ai + bankOffsetA] = arr[ai];
   temp[bi + bankOffsetB] = arr[bi];
 
-  for (int d = n>>1; d > 0; d >>= 1){ // build sum in place up the tree
+  int *d;
+  for (d = n>>1; d > 0; d >>= 1){ // build sum in place up the tree
 
   __syncthreads();
 
