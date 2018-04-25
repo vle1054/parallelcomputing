@@ -72,7 +72,6 @@ int n_d;
 
 cudaMalloc((void**) & arr_d, n*sizeof(int));
 cudaMalloc((void**) & arr_gpu_d, n*sizeof(int));
-cudaMalloc((void**) & n_d, sizeof(int));
 
 cout<<"GPU SCAN"<<endl;
 
