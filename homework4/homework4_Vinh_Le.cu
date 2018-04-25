@@ -100,7 +100,7 @@ for (int i = 0; i<n; i++){
 cout<<"CPU SCAN"<<endl;
 
 //set 0th element
-arr_cpu[0]=arr[0]
+arr_cpu[0]=arr[0];
 
 // CPU SCAN
 for (i=1; i<n; i++) {
