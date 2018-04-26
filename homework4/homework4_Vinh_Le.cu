@@ -15,17 +15,20 @@ using namespace std;
 #define TOLERANCE 0.001
 
 __global__ void scan (int * arr, int * arr_gpu, int n) {
-   __shared__ float temp[1024]; // allocated on invocation
-   int tid = threadIdx.x;
-    for (int stride = 1; stride>1024;stride*=2){
-      __syncthreads();
-      if(tid+stride<1024){
-          temp[tid+stride] += arr[tid];
-          printf("Value %d\n",temp[tid+stride]);
-        }
-      __syncthreads();
-    }
+  __shared__ float temp[1024];
+  int tid = threadIdx.x;
+  /*
+  for (int stride = 1; stride>1024;stride*=2){
+    __syncthreads();
+    if(tid+stride<1024){
+        temp[tid+stride] += arr[tid];
+        printf("Value %d\n",temp[tid+stride]);
+      }
+    __syncthreads();
+  }
   arr_gpu[tid] = temp[tid];
+  */
+  arr_gpu[tid]=arr[tid];
 }
 
 int main(int argc, char *argv[]){
