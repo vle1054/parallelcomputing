@@ -8,6 +8,7 @@ Colorado School of Mines 2018
 #include <ctime>
 #include <stdlib.h>
 #include <math.h>
+#include <cstdio>
 
 using namespace std;
 
@@ -17,18 +18,20 @@ using namespace std;
 __global__ void scan (int * arr, int * arr_gpu, int n) {
   __shared__ float temp[1024];
   int tid = threadIdx.x;
-  /*
-  for (int stride = 1; stride>1024;stride*=2){
-    __syncthreads();
-    if(tid+stride<1024){
-        temp[tid+stride] += arr[tid];
-        printf("Value %d\n",temp[tid+stride]);
+temp[tid]=arr[tid];  
+
+  for (unsigned int stride = 1024/2; stride > 0;stride /= 2){
+	 	
+__syncthreads();
+ if (tid+stride<1024){
+        temp[tid+stride] +=temp[tid];
+
       }
-    __syncthreads();
+   __syncthreads();
   }
+
   arr_gpu[tid] = temp[tid];
-  */
-  arr_gpu[tid]=arr[tid];
+  
 }
 
 int main(int argc, char *argv[]){
@@ -47,13 +50,15 @@ arr_gpu = (int *) malloc(n*sizeof(int));
 
 //fill arr with rnd nums between 1-1000
 for (int i = 0; i<n; i++){
-  arr[i]= rand()%1000 + 1;
+  //arr[i]= rand()%1000 + 1;
+arr[i]=1;
 }
 
 cout<<"CPU SCAN"<<endl;
 
 //set 0th element
-arr_cpu[0]=arr[0];
+arr[0]=0;
+arr_cpu[0]=0;
 
 // CPU SCAN
 for (int i=1; i<n; i++) {
@@ -61,6 +66,9 @@ for (int i=1; i<n; i++) {
 }
 
 cout<<"GPU SCAN"<<endl;
+
+
+
 
 //initialize and allocate memory for device same set as host
 int * arr_d, * arr_gpu_d;
@@ -77,14 +85,14 @@ scan<<<1, 1024>>>(arr_d, arr_gpu_d, n);
 //copy data from device to host
 cudaMemcpy(arr_gpu, arr_gpu_d, n*sizeof(float), cudaMemcpyDeviceToHost);
 
-for(int i = 0; i<n;i++){
-cout<<arr_cpu[i]<<",";
-}
-cout<<endl;
-for(int i = 0; i< n;i++){
-cout<<arr_gpu[i]<<",";
-}
-cout<<endl;
+
+
+
+
+
+
+
+
 //Compares arr_cpu with arr_gpu to determine accuracy
 int tfail = 0;
 for (int i = 0; i < n; i++) {
@@ -95,6 +103,7 @@ for (int i = 0; i < n; i++) {
 
 //print the number of failures
 cout << "Number of Failures: " << tfail <<"\n";
+
 
 return 0;
 }
