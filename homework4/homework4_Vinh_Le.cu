@@ -24,7 +24,9 @@ temp[tid]=arr[tid];
 	 	
 __syncthreads();
  if (tid+stride<1024){
-        temp[tid+stride] +=temp[tid];
+
+
+	temp[tid+stride] +=temp[tid];
 
       }
    __syncthreads();
