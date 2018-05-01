@@ -17,35 +17,7 @@ using namespace std;
 #define BLOCK_SIZE 512
 
 __global__ void scan (int * arr, int * arr_gpu, int n) {
-  __shared__ float XY[2*BLOCK_SIZE];
-  int i = blockIdx.x * blockDim.x + threadIdx.x;
-  if (i < n) {
-    XY[threadIdx.x] = arr[i];
-  }
 
-  for (unsigned int stride = 1;stride <= BLOCK_SIZE; stride *= 2) {
-    int index = (threadIdx.x+1)*stride*2 - 1;
-    if(index < 2*BLOCK_SIZE){
-      XY[index] += XY[index-stride];
-    }
-    __syncthreads();
-  }
-
-  for (unsigned int stride = BLOCK_SIZE/2; stride > 0; stride /= 2) {
-    __syncthreads();
-    int index = (threadIdx.x+1)*stride*2 - 1;
-    if(index+stride < 2*BLOCK_SIZE) {
-      XY[index + stride] += XY[index];
-    }
-  }
-  __syncthreads();
-  if (i < n){
-    arr_gpu[i] = XY[threadIdx.x];
-  }
-
-
-
-/*
   __shared__ float temp[BLOCK_SIZE];
   int tid = threadIdx.x;
   temp[tid]=arr[tid];
@@ -58,7 +30,7 @@ __global__ void scan (int * arr, int * arr_gpu, int n) {
       __syncthreads();
     }
   arr_gpu[tid] = temp[tid];
-*/
+
 }
 
 int main(int argc, char *argv[]){
