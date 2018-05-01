@@ -17,7 +17,7 @@ using namespace std;
 #define BLOCK_SIZE 1024
 
 __global__ void scan (int * arr, int * arr_gpu, int n) {
-  __shared__ float XY[BLOCK_SIZE];
+  __shared__ float XY[2*BLOCK_SIZE];
   int i = blockIdx.x * blockDim.x + threadIdx.x;
   if (i < n) {
     XY[threadIdx.x] = arr[i];
@@ -39,7 +39,9 @@ __global__ void scan (int * arr, int * arr_gpu, int n) {
     }
   }
   __syncthreads();
-  if (i < n) arr_gpu[i] = XY[threadIdx.x];
+  if (i < n){
+    arr_gpu[i] = XY[threadIdx.x];
+  }
 
 
 
