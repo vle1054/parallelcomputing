@@ -17,8 +17,8 @@ using namespace std;
 #define BLOCK_SIZE 1024
 
 __global__ void scan (int * arr, int * arr_gpu, int n) {
-
   __shared__ float temp[BLOCK_SIZE];
+
   int tid = threadIdx.x;
   temp[tid]=arr[tid];
 
