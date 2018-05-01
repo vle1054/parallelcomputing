@@ -16,13 +16,16 @@ using namespace std;
 #define TOLERANCE 0.001
 #define BLOCK_SIZE 1024
 
-__global__ void scan (int * arr, int * arr_gpu, int n) {
+
+__global__ void scan (int * arr, int * arr_gpu, int * aux, int n) {
   __shared__ float temp[BLOCK_SIZE];
+  int i = blockIdx.x;
 
   int tid = threadIdx.x;
-  temp[tid]=arr[tid];
 
-    for (unsigned int stride = BLOCK_SIZE/2; stride > 0;stride /= 2){
+  temp[tid] = arr[tid + i*BLOCK_SIZE];
+
+  for (unsigned int stride = BLOCK_SIZE/2; stride > 0;stride /= 2){
       __syncthreads();
       if (tid+stride<BLOCK_SIZE){
         temp[tid+stride] +=temp[tid];
@@ -31,7 +34,12 @@ __global__ void scan (int * arr, int * arr_gpu, int n) {
     }
   arr_gpu[tid] = temp[tid];
 
+  aux[i] = temp[1023 + i*BLOCK_SIZE];
+
 }
+
+
+
 
 int main(int argc, char *argv[]){
 
@@ -47,10 +55,12 @@ arr = (int *) malloc(n*sizeof(int));
 arr_cpu = (int *) malloc(n*sizeof(int));
 arr_gpu = (int *) malloc(n*sizeof(int));
 
+
+
 //fill arr with rnd nums between 1-1000
 for (int i = 0; i<n; i++){
   //arr[i]= rand()%1000 + 1;
-arr[i]=1;
+arr[i]=1;//for debug
 }
 
 cout<<"CPU SCAN"<<endl;
@@ -66,28 +76,27 @@ for (int i=1; i<n; i++) {
 
 cout<<"GPU SCAN"<<endl;
 
-
-
-
 //initialize and allocate memory for device same set as host
 int * arr_d, * arr_gpu_d;
-
 
 cudaMalloc((void**) & arr_d, n*sizeof(int));
 cudaMalloc((void**) & arr_gpu_d, n*sizeof(int));
 
+int NUM_BLOCK = ceil((float)n/BLOCK_SIZE);
+
+int *aux, *aux_d;
+aux = (int *) malloc(NUM_BLOCK*sizeof(int));
+cudaMalloc((void**) & aux_d, NUM_BLOCK*sizeof(int));
 
 //copy data from host to device
 cudaMemcpy(arr_d, arr, n*sizeof(int), cudaMemcpyHostToDevice);
 //GPU SCAN
-int NUM_BLOCK = ceil(n/BLOCK_SIZE);
-printf("%d\n %d\n",n, BLOCK_SIZE );
-printf("%d\n", NUM_BLOCK );
-scan<<<NUM_BLOCK, BLOCK_SIZE>>>(arr_d, arr_gpu_d, n);
+
+scan<<<NUM_BLOCK, BLOCK_SIZE>>>(arr_d, arr_gpu_d, aux_d, n);
 //copy data from device to host
-cudaMemcpy(arr_gpu, arr_gpu_d, n*sizeof(float), cudaMemcpyDeviceToHost);
-
-
+cudaMemcpy(arr_gpu, arr_gpu_d, n*sizeof(int), cudaMemcpyDeviceToHost);
+cudaMemcpy(aux, aux_d, NUM_BLOCK*sizeof(int), cudaMemcpyDeviceToHost);
+printf("%d\n",aux[0] );
 
 //Compares arr_cpu with arr_gpu to determine accuracy
 int tfail = 0;
