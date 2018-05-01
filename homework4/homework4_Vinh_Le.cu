@@ -17,45 +17,22 @@ using namespace std;
 #define BLOCK_SIZE 1024
 
 __global__ void scan (int * arr, int * arr_gpu, int n) {
-  __shared__ float temp[2*BLOCK_SIZE];
-  int tid = threadIdx.x;
+  __shared__ float temp[BLOCK_SIZE];
 
-  for (unsigned int stride = 1;stride <= BLOCK_SIZE; stride *= 2) {
-     int index = (tid+1)*stride*2 - 1;
-     if(index < 2*BLOCK_SIZE){
-       temp[index] += temp[index-stride];
+  int tid = threadIdx.x;
+  int i = blockId.x;
+
+  temp[tid]=arr[tid];
+
+    for (unsigned int stride = BLOCK_SIZE/2; stride > 0;stride /= 2){
+      __syncthreads();
+      if (tid+stride<BLOCK_SIZE){
+        temp[tid+stride] +=temp[tid];
       }
       __syncthreads();
-  }
-
-
-
-  for (unsigned int stride = BLOCK_SIZE/2; stride > 0; stride /= 2) {
-     __syncthreads();
-     int index = (tid+1)*stride*2 - 1;
-     if(index+stride < 2*BLOCK_SIZE) {
-       temp[index + stride] += temp[index];
-     }
-   }
-   __syncthreads();
-
+    }
   arr_gpu[tid] = temp[tid];
 
-
-
-
-/*
-  int tid = threadIdx.x;
-temp[tid]=arr[tid];
-  for (unsigned int stride = BLOCK_SIZE/2; stride > 0;stride /= 2){
-__syncthreads();
- if (tid+stride<BLOCK_SIZE){
-	temp[tid+stride] +=temp[tid];
-      }
-   __syncthreads();
-  }
-  arr_gpu[tid] = temp[tid];
-  */
 }
 
 int main(int argc, char *argv[]){
