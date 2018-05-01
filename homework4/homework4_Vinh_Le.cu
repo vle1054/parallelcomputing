@@ -17,15 +17,15 @@ using namespace std;
 #define BLOCK_SIZE 1024
 
 __global__ void scan (int * arr, int * arr_gpu, int n) {
-  __shared__ float temp[BLOCK_SIZE];
+  __shared__ float temp[1024];
 
   int tid = threadIdx.x;
 
   temp[tid]=arr[tid];
 
-    for (unsigned int stride = BLOCK_SIZE/2; stride > 0;stride /= 2){
+    for (unsigned int stride = 1024/2; stride > 0;stride /= 2){
       __syncthreads();
-      if (tid+stride<BLOCK_SIZE){
+      if (tid+stride<1024){
         temp[tid+stride] +=temp[tid];
       }
       __syncthreads();
@@ -83,7 +83,7 @@ cudaMemcpy(arr_d, arr, n*sizeof(int), cudaMemcpyHostToDevice);
 //GPU SCAN
 int NUM_BLOCK = n/BLOCK_SIZE;
 
-scan<<<NUM_BLOCK, BLOCK_SIZE>>>(arr_d, arr_gpu_d, n);
+scan<<<1, BLOCK_SIZE>>>(arr_d, arr_gpu_d, n);
 //copy data from device to host
 cudaMemcpy(arr_gpu, arr_gpu_d, n*sizeof(float), cudaMemcpyDeviceToHost);
 
