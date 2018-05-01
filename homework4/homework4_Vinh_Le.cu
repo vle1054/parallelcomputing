@@ -17,15 +17,15 @@ using namespace std;
 #define BLOCK_SIZE 1024
 
 __global__ void scan (int * arr, int * arr_gpu, int n) {
-  __shared__ float temp[1024];
+  __shared__ float temp[BLOCK_SIZE];
 
   int tid = threadIdx.x;
 
   temp[tid]=arr[tid];
 
-    for (unsigned int stride = 1024/2; stride > 0;stride /= 2){
+    for (unsigned int stride = BLOCK_SIZE/2; stride > 0;stride /= 2){
       __syncthreads();
-      if (tid+stride<1024){
+      if (tid+stride<BLOCK_SIZE){
         temp[tid+stride] +=temp[tid];
       }
       __syncthreads();
