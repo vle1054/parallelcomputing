@@ -20,19 +20,17 @@ __global__ void scan (int * arr, int * arr_gpu, int n) {
   __shared__ float temp[BLOCK_SIZE];
 
   int tid = threadIdx.x;
-  int i = blockIdx.x;
-  int start = i*BLOCK_SIZE;
 
-  temp[start+tid]=arr[start+tid];
+  temp[tid]=arr[tid];
 
     for (unsigned int stride = BLOCK_SIZE/2; stride > 0;stride /= 2){
       __syncthreads();
       if (tid+stride<BLOCK_SIZE){
-        temp[start+tid+stride] +=temp[start+tid];
+        temp[tid+stride] +=temp[tid];
       }
       __syncthreads();
     }
-  arr_gpu[start+tid] = temp[start+tid];
+  arr_gpu[tid] = temp[tid];
 
 }
 
