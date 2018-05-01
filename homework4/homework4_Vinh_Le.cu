@@ -80,7 +80,7 @@ cudaMalloc((void**) & arr_gpu_d, n*sizeof(int));
 //copy data from host to device
 cudaMemcpy(arr_d, arr, n*sizeof(int), cudaMemcpyHostToDevice);
 //GPU SCAN
-int NUM_BLOCK = n/BLOCK_SIZE;
+int NUM_BLOCK = ceil(n/BLOCK_SIZE);
 
 scan<<<1, BLOCK_SIZE>>>(arr_d, arr_gpu_d, n);
 //copy data from device to host
