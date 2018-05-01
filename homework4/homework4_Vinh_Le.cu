@@ -17,30 +17,60 @@ using namespace std;
 #define BLOCK_SIZE 1024
 
 
-__global__ void scan (int * arr, int * arr_gpu, int * aux, int n) {
-  __shared__ float temp[BLOCK_SIZE];
-  int i = blockIdx.x;
+__global__ void scan (int * arr, int * arr_gpu, int * aux, int n){
 
+  __shared__ float temp[BLOCK_SIZE];
+  int i = blockIdx.x * blockDim.x + threadIdx.x;
+  int bid = blockIdx.x;
   int tid = threadIdx.x;
 
-  temp[tid] = arr[tid + i*BLOCK_SIZE];
+  if (i < n && i > 0) {
+    temp[tid] = arr[i-1];
+  }else{
+    temp[0]= 0;
+  }
+  int tempint;
 
-  for (unsigned int stride = BLOCK_SIZE/2; stride > 0;stride /= 2){
-      __syncthreads();
-      if (tid+stride<BLOCK_SIZE){
-        temp[tid+stride] +=temp[tid];
-      }
-      __syncthreads();
+  for (unsigned int stride = 1; stride < blockDim.x; stride *= 2) {
+    __syncthreads();
+    if(tid>=stride){
+      tempint = temp[tid - stride];
     }
-  arr_gpu[tid] = temp[tid];
+    __syncthreads();
+    if(tid>=stride){
+      temp[tid] += tempint;
+    }
+  }
+  __syncthreads();
 
-  aux[i] = temp[1023 + i*BLOCK_SIZE];
-
+  if(i < n) {
+    arr_gpu[i] = temp[tid];
+  }
+if(tid == 0 && aux != NULL){
+  aux[bid]=temp[1023];
+}
 }
 
 
+__global__ void finish (int * arr,int *aux, int NUM_BLOCK){
+  int bid = blockIdx.x;
+  int tid = threadIdx.x;
+  if (bid>=1){
+    arr[bid*BLOCK_SIZE+tid] += aux[bid];
+  }
+  __syncthreads();
+}
 
 
+/*
+__global__ void finish (int * arr, int NUM_BLOCK){
+   int tid = threadIdx.x;
+   for(int j = 1; j<NUM_BLOCK;j++){
+     arr[j*BLOCK_SIZE+tid] += arr[j*BLOCK_SIZE-1];
+     __syncthreads();
+   }
+}
+*/
 int main(int argc, char *argv[]){
 
 srand(time(NULL));
@@ -55,23 +85,20 @@ arr = (int *) malloc(n*sizeof(int));
 arr_cpu = (int *) malloc(n*sizeof(int));
 arr_gpu = (int *) malloc(n*sizeof(int));
 
-
-
 //fill arr with rnd nums between 1-1000
 for (int i = 0; i<n; i++){
   //arr[i]= rand()%1000 + 1;
-arr[i]=1;//for debug
+  arr[i]=1;
 }
 
 cout<<"CPU SCAN"<<endl;
 
 //set 0th element
-arr[0]=0;
 arr_cpu[0]=0;
 
 // CPU SCAN
 for (int i=1; i<n; i++) {
-  arr_cpu[i]= arr_cpu[i-1]+arr[i];
+  arr_cpu[i]= arr_cpu[i-1]+arr[i-1];
 }
 
 cout<<"GPU SCAN"<<endl;
@@ -84,19 +111,19 @@ cudaMalloc((void**) & arr_gpu_d, n*sizeof(int));
 
 int NUM_BLOCK = ceil((float)n/BLOCK_SIZE);
 
-int *aux, *aux_d;
-aux = (int *) malloc(NUM_BLOCK*sizeof(int));
+int * aux_d;
 cudaMalloc((void**) & aux_d, NUM_BLOCK*sizeof(int));
+
 
 //copy data from host to device
 cudaMemcpy(arr_d, arr, n*sizeof(int), cudaMemcpyHostToDevice);
 //GPU SCAN
 
 scan<<<NUM_BLOCK, BLOCK_SIZE>>>(arr_d, arr_gpu_d, aux_d, n);
+scan<<<1, BLOCK_SIZE>>>(aux_d, aux_d, NULL, n);
+finish<<<NUM_BLOCK, BLOCK_SIZE>>>(arr_gpu_d, aux_d, NUM_BLOCK);
 //copy data from device to host
 cudaMemcpy(arr_gpu, arr_gpu_d, n*sizeof(int), cudaMemcpyDeviceToHost);
-cudaMemcpy(aux, aux_d, NUM_BLOCK*sizeof(int), cudaMemcpyDeviceToHost);
-printf("%d\n",aux[0] );
 
 //Compares arr_cpu with arr_gpu to determine accuracy
 int tfail = 0;
@@ -109,6 +136,10 @@ for (int i = 0; i < n; i++) {
 //print the number of failures
 cout << "Number of Failures: " << tfail <<"\n";
 
-
-return 0;
+/*
+for(int i = 0 ; i<n ; i++){
+  printf ("%d,", arr_gpu[i]);
+}
+*/
+ return 0;
 }
