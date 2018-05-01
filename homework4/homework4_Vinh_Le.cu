@@ -14,26 +14,48 @@ using namespace std;
 
 //Set tolerance for the check
 #define TOLERANCE 0.001
+#define BLOCK_SIZE 1024
 
 __global__ void scan (int * arr, int * arr_gpu, int n) {
-  __shared__ float temp[1024];
+  __shared__ float temp[BLOCK_SIZE];
   int tid = threadIdx.x;
-temp[tid]=arr[tid];  
 
-  for (unsigned int stride = 1024/2; stride > 0;stride /= 2){
-	 	
+  for (unsigned int stride = 1;stride <= BLOCK_SIZE; stride *= 2) {
+     int index = (tid+1)*stride*2 - 1;
+     if(index < 2*BLOCK_SIZE){
+       temp[index] += temp[index-stride];
+      }
+      __syncthreads();
+  }
+
+
+
+  for (unsigned int stride = BLOCK_SIZE/2; stride > 0; stride /= 2) {
+     __syncthreads();
+     int index = (tid+1)*stride*2 - 1;
+     if(index+stride < 2*BLOCK_SIZE) {
+       temp[index + stride] += temp[index];
+     }
+   }
+   __syncthreads();
+
+  arr_gpu[tid] = temp[tid];
+
+
+
+
+/*
+  int tid = threadIdx.x;
+temp[tid]=arr[tid];
+  for (unsigned int stride = BLOCK_SIZE/2; stride > 0;stride /= 2){
 __syncthreads();
- if (tid+stride<1024){
-
-
+ if (tid+stride<BLOCK_SIZE){
 	temp[tid+stride] +=temp[tid];
-
       }
    __syncthreads();
   }
-
   arr_gpu[tid] = temp[tid];
-  
+  */
 }
 
 int main(int argc, char *argv[]){
@@ -83,7 +105,9 @@ cudaMalloc((void**) & arr_gpu_d, n*sizeof(int));
 //copy data from host to device
 cudaMemcpy(arr_d, arr, n*sizeof(int), cudaMemcpyHostToDevice);
 //GPU SCAN
-scan<<<1, 1024>>>(arr_d, arr_gpu_d, n);
+int NUM_BLOCK = n/BLOCK_SIZE;
+
+scan<<<NUM_BLOCK, BLOCK_SIZE>>>(arr_d, arr_gpu_d, n);
 //copy data from device to host
 cudaMemcpy(arr_gpu, arr_gpu_d, n*sizeof(float), cudaMemcpyDeviceToHost);
 
