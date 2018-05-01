@@ -14,7 +14,7 @@ using namespace std;
 
 //Set tolerance for the check
 #define TOLERANCE 0.001
-#define BLOCK_SIZE 512
+#define BLOCK_SIZE 1024
 
 __global__ void scan (int * arr, int * arr_gpu, int n) {
 
