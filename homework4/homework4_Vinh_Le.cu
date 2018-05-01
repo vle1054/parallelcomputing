@@ -19,7 +19,7 @@ using namespace std;
 __global__ void scan (int * arr, int * arr_gpu, int n) {
   __shared__ float XY[BLOCK_SIZE];
   int i = blockIdx.x * blockDim.x + threadIdx.x;
-  if (i < InputSize) {
+  if (i < n) {
     XY[threadIdx.x] = arr[i];
   }
 
