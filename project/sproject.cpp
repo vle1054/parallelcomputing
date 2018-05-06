@@ -12,14 +12,13 @@ Algorithm Chosen: Quick sort
 Parallelization Method: CilkPlus
 */
 
+
 #include <iostream>
 #include <time.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <cilk/cilk.h>
 #include <algorithm>
-#include <ratio>
-#include <chrono>
 
 using namespace std;
 
@@ -53,67 +52,37 @@ void sequential_quickSort(int arr[], int low, int high){
     }
 }
 
-void parallel_quicksort(int arr[], int low, int high){
-    if (low < high){
-
-        int pi = spartition(arr, low, high);
-
-        cilk_spawn parallel_quicksort(arr, low, pi - 1);
-         parallel_quicksort(arr, pi + 1, high);
-        cilk_sync;
-    }
-}
-
 int main(int argc, char *argv[]){
+    clock_t t1, t2;
     float tdiff1, tdiff2;
 
-	   srand(time(NULL));
+	srand(time(NULL));
 
-	  int n = atoi(argv[1]);
+	   int n = atoi(argv[1]);
 
     int* a = new int[n];
-    int* b = new int[n];
     cilk_for (int i = 0; i< n; i++){
-        a[i] = i;
+      a[i] = i;
     }
-
 //shuffle
-  random_shuffle(a, a + n);
-
-  cilk_for (int i = 0; i< n; i++){
-      b[i] = a[i];
-  }
-
+    random_shuffle(a, a + n);
 
 //sequential sort
-  chrono::high_resolution_clock::time_point t1 = chrono::high_resolution_clock::now();
+      t1 = clock();
     sequential_quickSort(a, 0, n-1);
-  chrono::high_resolution_clock::time_point t2 = chrono::high_resolution_clock::now();
-  chrono::duration<double> time_span1 = chrono::duration_cast<chrono::duration<double>>(t2 - t1);
-    printf("Time it took for Sequential run: %3.5f with %d elements\n", time_span1.count(), n);
-
-
-
-
-//parallel sort
-    chrono::high_resolution_clock::time_point t3 = chrono::high_resolution_clock::now();
-    parallel_quicksort(b, 0, n-1);
-    chrono::high_resolution_clock::time_point t4 = chrono::high_resolution_clock::now();
-    chrono::duration<double> time_span2 = chrono::duration_cast<chrono::duration<double>>(t4 - t3);
-        printf("Time it took for Parallel run: %3.5f with %d elements\n", time_span2.count(), n);
+      t1 = clock() - t1;
+    tdiff1 = (((float)t1)/CLOCKS_PER_SEC);
+      printf("Time it took for Sequential run: %3.5f with %d elements\n", tdiff1, n);
 
 
 
 
 //Check
-  bool afail = false;
-    bool bfail = false;
+    bool afail = false;
 
     for(int i = 0; i<n;i++){
       if (a[i] != i){afail = true;}
-      if (b[i] != i){bfail = true;}
     }
-
 
   if(afail == true){
     printf("Sequential Sorting Has Failed.\n");
@@ -121,12 +90,6 @@ int main(int argc, char *argv[]){
     printf("Sequential Sorting Has Succeeded.\n" );
   }
 
-
-  if(bfail == true) {
-    printf("Parallel Sorting Has Failed.\n");
-  }else{
-    printf("Parallel Sorting Has Succeeded.\n" );
-  }
 
 
   return 0;
