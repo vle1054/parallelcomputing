@@ -52,6 +52,41 @@ __global__ void scan (int * arr, int * arr_gpu, int * aux, int n){
 }
 
 
+<<<<<<< HEAD
+
+
+
+//initialize and allocate memory for device same set as host
+int * arr_d, * arr_gpu_d;
+
+
+cudaMalloc((void**) & arr_d, n*sizeof(int));
+cudaMalloc((void**) & arr_gpu_d, n*sizeof(int));
+
+
+//copy data from host to device
+cudaMemcpy(arr_d, arr, n*sizeof(int), cudaMemcpyHostToDevice);
+//GPU SCAN
+
+int NUM_BLOCK = ceil(n/BLOCK_SIZE);
+printf("%d\n %d\n",n, BLOCK_SIZE );
+printf("%d\n", NUM_BLOCK );
+
+
+
+scan<<<NUM_BLOCK, BLOCK_SIZE>>>(arr_d, arr_gpu_d, n);
+//copy data from device to host
+cudaMemcpy(arr_gpu, arr_gpu_d, n*sizeof(float), cudaMemcpyDeviceToHost);
+
+
+
+//Compares arr_cpu with arr_gpu to determine accuracy
+int tfail = 0;
+for (int i = 0; i < n; i++) {
+  if (abs(arr_gpu[i] - arr_cpu[i]) > TOLERANCE) {//take abs value and compare with tolerance
+    tfail += 1;//if difference exceeds tolerance
+  }
+=======
 __global__ void finish (int * arr,int *aux, int NUM_BLOCK){
 	int bid = blockIdx.x;
 	int tid = threadIdx.x;
@@ -59,6 +94,7 @@ __global__ void finish (int * arr,int *aux, int NUM_BLOCK){
 		arr[bid*BLOCK_SIZE+tid] += aux[bid];
 	}
 	__syncthreads();
+>>>>>>> 389eb4edb380319ddf1c6433c3fd73fc06fb3d7e
 }
 
 
