@@ -23,96 +23,94 @@ Parallelization Method: CilkPlus
 
 using namespace std;
 
-void sswap(int* a, int* b){
+void swap(int* a, int* b){
     int t = *a;
     *a = *b;
     *b = t;
 }
 
-int spartition (int arr[], int low, int high){
-    int pivot = arr[high];
-    int i = (low - 1);
+int partition (int arr[], int low, int high){
+  int pivot = arr[high];
+  int i = (low - 1);
 
-    for (int j = low; j <= high- 1; j++){
-        if (arr[j] <= pivot){
-            i++;
-            sswap(&arr[i], &arr[j]);
-        }
+  for (int j = low; j <= high- 1; j++){
+    if (arr[j] <= pivot){
+      i++;
+      swap(&arr[i], &arr[j]);
     }
-    sswap(&arr[i + 1], &arr[high]);
-    return (i + 1);
+  }
+  swap(&arr[i + 1], &arr[high]);
+  return (i + 1);
 }
 
 void sequential_quickSort(int arr[], int low, int high){
-    if (low < high){
+  if (low < high){
+    int pi = partition(arr, low, high);
 
-        int pi = spartition(arr, low, high);
-
-        sequential_quickSort(arr, low, pi - 1);
-        sequential_quickSort(arr, pi + 1, high);
-    }
+    sequential_quickSort(arr, low, pi - 1);
+    sequential_quickSort(arr, pi + 1, high);
+  }
 }
 
 void parallel_quicksort(int arr[], int low, int high){
-    if (low < high){
+  if (low < high){
+    int pi = partition(arr, low, high);
 
-        int pi = spartition(arr, low, high);
-
-        cilk_spawn parallel_quicksort(arr, low, pi - 1);
-         parallel_quicksort(arr, pi + 1, high);
-        cilk_sync;
-    }
+    cilk_spawn parallel_quicksort(arr, low, pi - 1);
+    parallel_quicksort(arr, pi + 1, high);
+    cilk_sync;
+  }
 }
 
 int main(int argc, char *argv[]){
-    float tdiff1, tdiff2;
+  float tdiff1, tdiff2;
 
-	   srand(time(NULL));
+  srand(time(NULL));
 
-	  int n = atoi(argv[1]);
+  int n = atoi(argv[1]);
 
-    int* a = new int[n];
-    int* b = new int[n];
-    cilk_for (int i = 0; i< n; i++){
-        a[i] = i;
-    }
+  int* a = new int[n];
+  int* b = new int[n];
+  cilk_for (int i = 0; i< n; i++){
+    a[i] = i;
+  }
 
 //shuffle
   random_shuffle(a, a + n);
 
   cilk_for (int i = 0; i< n; i++){
-      b[i] = a[i];
+    b[i] = a[i];
   }
 
 
 //sequential sort
   chrono::high_resolution_clock::time_point t1 = chrono::high_resolution_clock::now();
-    sequential_quickSort(a, 0, n-1);
+  sequential_quickSort(a, 0, n-1);
   chrono::high_resolution_clock::time_point t2 = chrono::high_resolution_clock::now();
   chrono::duration<double> time_span1 = chrono::duration_cast<chrono::duration<double>>(t2 - t1);
-    printf("Time it took for Sequential run: %3.5f with %d elements\n", time_span1.count(), n);
+  printf("Time it took for Sequential run: %3.5f with %d elements\n", time_span1.count(), n);
 
 
 
 
 //parallel sort
-    chrono::high_resolution_clock::time_point t3 = chrono::high_resolution_clock::now();
-    parallel_quicksort(b, 0, n-1);
-    chrono::high_resolution_clock::time_point t4 = chrono::high_resolution_clock::now();
-    chrono::duration<double> time_span2 = chrono::duration_cast<chrono::duration<double>>(t4 - t3);
-        printf("Time it took for Parallel run: %3.5f with %d elements\n", time_span2.count(), n);
+  chrono::high_resolution_clock::time_point t3 = chrono::high_resolution_clock::now();
+  parallel_quicksort(b, 0, n-1);
+  chrono::high_resolution_clock::time_point t4 = chrono::high_resolution_clock::now();
+  chrono::duration<double> time_span2 = chrono::duration_cast<chrono::duration<double>>(t4 - t3);
+  printf("Time it took for Parallel run: %3.5f with %d elements\n", time_span2.count(), n);
 
 
 
 
 //Check
   bool afail = false;
-    bool bfail = false;
+  bool bfail = false;
 
-    for(int i = 0; i<n;i++){
-      if (a[i] != i){afail = true;}
-      if (b[i] != i){bfail = true;}
-    }
+  for(int i = 0; i<n;i++){
+    if (a[i] != i){afail = true;}
+    if (b[i] != i){bfail = true;}
+  }
 
 
   if(afail == true){
